@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.24...3.30)
 project(raylib-game-template)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 include(FetchContent)
 
 # Generate compile_commands.json
@@ -19,7 +23,8 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(raylib)
 
 # Our Project
-add_executable(${PROJECT_NAME})
+set(SOURCES src/raylib_game.cpp)
+add_executable(${PROJECT_NAME} ${SOURCES})
 add_subdirectory(src)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
