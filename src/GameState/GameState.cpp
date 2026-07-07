@@ -29,3 +29,9 @@ void GameState::draw() {
 
     }
 }
+
+void GameState::drawUI() {
+    if (current_state == State::PLAYING) {
+        game.drawUI();
+    }
+}

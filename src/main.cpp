@@ -3,6 +3,7 @@
 //
 #include "raylib.h"
 #include "GameState/GameState.h"
+#include "UI/Hotbar/Hotbar.h"
 
 #if defined(PLATFORM_WEB)
     #include <emscripten/emscripten.h>      // Emscripten library
@@ -55,6 +56,10 @@ void UpdateDrawFrame(void) {
         (Rectangle){ 0, 0, (float)target.texture.width, -(float)target.texture.height },
         (Rectangle){ 0, 0, (float)target.texture.width, (float)target.texture.height },
         (Vector2){ 0, 0 }, 0.0f, WHITE);
+
+
     // UI?
+
+    gameState.drawUI();
     EndDrawing();
 }

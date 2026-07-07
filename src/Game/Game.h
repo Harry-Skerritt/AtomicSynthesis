@@ -5,6 +5,7 @@
 #ifndef GAME_H
 #define GAME_H
 #include "../Grid/Grid.h"
+#include "../UI/Hotbar/Hotbar.h"
 
 
 class Game {
@@ -13,9 +14,13 @@ public:
     void update();
     void draw();
 
+    void drawUI();
+
 
 private:
     Grid m_grid;
+    Hotbar m_hotbar;
+
 };
 
 

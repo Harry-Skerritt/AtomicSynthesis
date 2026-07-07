@@ -20,6 +20,7 @@ public:
 
     void update();
     void draw();
+    void drawUI();
 };
 
 #endif //GAMESTATE_H

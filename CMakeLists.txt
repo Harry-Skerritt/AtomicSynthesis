@@ -33,6 +33,8 @@ set(SOURCES
         src/Game/Game.cpp
         src/Grid/Grid.h
         src/Grid/Grid.cpp
+        src/UI/Hotbar/Hotbar.cpp
+        src/UI/Hotbar/Hotbar.h
 )
 add_executable(${PROJECT_NAME} ${SOURCES})
 add_subdirectory(src)

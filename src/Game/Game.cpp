@@ -19,6 +19,10 @@ void Game::draw() {
     m_grid.draw();
 }
 
+void Game::drawUI() {
+    m_hotbar.drawHotbar();
+}
+
 
 
 
