@@ -6,6 +6,7 @@
 #include "raylib.h"
 #include <cmath>
 
+#include "../AssetManager/AssetManager.h"
 #include "../utils/Colours.h"
 #include "../utils/Element.h"
 
@@ -13,7 +14,8 @@ Tile::Tile(int q, int r, int atomic_number, Vector2 pos)
     : q(q), r(r), atomic_number(atomic_number), pos(pos) {}
 
 
-void Tile::draw(const float hex_size, const float centre_x, const float centre_y, const bool is_hovered, const bool is_placing) {
+void Tile::draw(
+    const float hex_size, const float centre_x, const float centre_y, const bool is_hovered, const bool is_placing) {
     float x = hex_size * (3.0f / 2.0f * q);
     float y = hex_size * (sqrt(3.0f) * (r + q / 2.0f));
     pos = { x + centre_x, y + centre_y };
@@ -35,12 +37,14 @@ void Tile::draw(const float hex_size, const float centre_x, const float centre_y
     }
 
     if (atomic_number > 0) {
-        int symbol_width = MeasureText(e.symbol, 30);
-        DrawText(e.symbol, (int)pos.x - symbol_width / 2, (int)pos.y - 20, 30, DARKGRAY);
+        auto symbol_font = AssetManager::GetFont("itim-40");
+        int symbol_width = MeasureTextEx(symbol_font, e.symbol, 40, 2).x;
+        DrawTextEx(symbol_font, e.symbol, {pos.x - symbol_width / 2, pos.y - 30}, 40, 2, DARKGRAY);
 
+        auto num_font = AssetManager::GetFont("itim-20");
         std::string num = std::to_string(atomic_number);
-        int num_width = MeasureText(num.c_str(), 15);
-        DrawText(num.c_str(), (int)pos.x - num_width / 2, (int)pos.y + 20, 15, GRAY);
+        int num_width = MeasureTextEx(num_font, num.c_str(), 20, 2).x;
+        DrawTextEx(num_font, num.c_str(), {pos.x - num_width / 2, pos.y + 15}, 20, 2, GRAY);
     }
 }
 
@@ -57,12 +61,19 @@ void Tile::drawTempTile(Vector2 screenPos, float hex_size, int atomic_number) {
     DrawPolyLinesEx(screenPos, 6, hex_size, 0, 3.0f, Colours::HEX_BORDER);
 
     if (atomic_number > 0) {
-        int symbol_width = MeasureText(e.symbol, 30);
-        DrawText(e.symbol, (int)screenPos.x - symbol_width / 2, (int)screenPos.y - 20, 30, DARKGRAY);
+        auto symbol_font = AssetManager::GetFont("itim-40");
+        auto num_font = AssetManager::GetFont("itim-20");
 
-        std::string num = std::to_string(atomic_number);
-        int num_width = MeasureText(num.c_str(), 15);
-        DrawText(num.c_str(), (int)screenPos.x - num_width / 2, (int)screenPos.y + 15, 15, GRAY);
+        Vector2 symbol_dims = MeasureTextEx(symbol_font, e.symbol, 40, 2);
+        Vector2 num_dims = MeasureTextEx(num_font, std::to_string(atomic_number).c_str(), 20, 2);
+
+        DrawTextEx(symbol_font, e.symbol,
+        { pos.x - symbol_dims.x / 2.0f, pos.y - symbol_dims.y / 1.2f },
+        40, 2, DARKGRAY);
+
+        DrawTextEx(num_font, std::to_string(atomic_number).c_str(),
+            { pos.x - num_dims.x / 2.0f, pos.y - num_dims.y / 2.0f + 15 },
+            20, 2, GRAY);
     }
 }
 

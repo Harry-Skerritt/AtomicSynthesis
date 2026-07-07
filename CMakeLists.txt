@@ -37,6 +37,8 @@ set(SOURCES
         src/UI/Hotbar/Hotbar.h
         src/Grid/Tile.h
         src/Grid/Tile.cpp
+        src/AssetManager/AssetManager.h
+        src/AssetManager/AssetManager.cpp
 )
 add_executable(${PROJECT_NAME} ${SOURCES})
 add_subdirectory(src)

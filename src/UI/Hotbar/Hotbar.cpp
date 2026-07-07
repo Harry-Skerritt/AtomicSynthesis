@@ -3,12 +3,8 @@
 //
 
 #include "Hotbar.h"
-
-#include <iostream>
-#include <__ostream/basic_ostream.h>
-
 #include "../../utils/Colours.h"
-#include "../../utils/Element.h"
+#include "../../Grid/Tile.h"
 
 void Hotbar::drawHotbar() const {
     constexpr float slot_size = 80;
@@ -58,23 +54,8 @@ void Hotbar::drawHotbar() const {
             };
 
             if (slots[i].atomic_number > 0) {
-                Element e = PeriodicTable[slots[i].atomic_number];
-                Color fill = getColourForType(e.type);
-
-                DrawPoly(
-                    centre,6, h_slot_size - 4, 0, fill
-                );
-
-                DrawPolyLinesEx(
-                    centre,6, h_slot_size - 4, 0, 3.0f, Colours::HEX_BORDER
-                );
-
-                int symbol_width = MeasureText(e.symbol, 30);
-                DrawText(e.symbol, (int)centre.x - symbol_width / 2, (int)centre.y - 20, 30, DARKGRAY);
-
-                std::string num = std::to_string(slots[i].atomic_number);
-                int num_width = MeasureText(num.c_str(), 15);
-                DrawText(num.c_str(), (int)centre.x - num_width / 2, (int)centre.y + 15, 12, GRAY);
+                Tile temp_tile(0, 0, slots[i].atomic_number, centre);
+                temp_tile.drawTempTile(centre, h_slot_size - 5, slots[i].atomic_number);
             }
         }
     }

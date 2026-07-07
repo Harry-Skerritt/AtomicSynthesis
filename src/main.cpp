@@ -2,6 +2,7 @@
 // Created by Harry Skerritt on 06/07/2026.
 //
 #include "raylib.h"
+#include "AssetManager/AssetManager.h"
 #include "GameState/GameState.h"
 #include "UI/Hotbar/Hotbar.h"
 #include "utils/Colours.h"
@@ -24,6 +25,9 @@ int main() {
     target = LoadRenderTexture(screen_width, screen_height);
     SetTextureFilter(target.texture, TEXTURE_FILTER_BILINEAR);
 
+    AssetManager::LoadFontKey("itim-40", "resources/fonts/Itim/Itim-Regular.ttf", 40);
+    AssetManager::LoadFontKey("itim-20", "resources/fonts/Itim/Itim-Regular.ttf", 20);
+
     // For WASM
 #if defined(PLATFORM_WEB)
     emscripten_set_main_loop(UpdateDrawFrame, 60, 1);
@@ -38,6 +42,7 @@ int main() {
 
     UnloadRenderTexture(target);
     CloseWindow();
+    AssetManager::UnloadAll();
     return 0;
 }
 

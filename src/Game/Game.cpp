@@ -11,6 +11,10 @@ Game::Game(): m_grid() {
 
 }
 
+Game::~Game() {
+}
+
+
 
 void Game::update() {
     m_grid.update();
