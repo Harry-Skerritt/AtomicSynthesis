@@ -8,10 +8,10 @@
 #include <cmath>
 
 #include "../AssetManager/AssetManager.h"
+#include "../utils/Element.h"
 
-Game::Game(): m_grid() {
-
-}
+Game::Game()
+    : m_grid(), m_spawner(sizeof(PeriodicTable) / sizeof(*PeriodicTable)) {}
 
 Game::~Game() {
 }
@@ -24,7 +24,11 @@ void Game::update() {
     if (IsKeyPressed(KEY_E)) {
         auto next_slot = m_hotbar.getNextEmptyIndex();
         if (next_slot == -1) return;
-        m_hotbar.setSlot(next_slot, num++);
+        m_hotbar.setSlot(next_slot, m_spawner.spawnRandomElement());
+    }
+
+    if (IsKeyPressed(KEY_R)) {
+        m_spawner.setMaxAtomicNumber(m_spawner.getMaxAtomicNumber() + 1);
     }
 
     is_placing = m_hotbar.isSlotOccupied(0);
@@ -36,7 +40,7 @@ void Game::update() {
             m_grid.setTile(tile->q, tile->r, m_hotbar.getSlot(0));
             // Temp
             score += m_hotbar.getSlot(0);
-            updateHighestAtomicNumber(m_hotbar.getSlot(0));
+            m_spawner.setMaxAtomicNumber(m_hotbar.getSlot(0));
             // ---
             shiftHotbar();
         }
@@ -58,7 +62,7 @@ void Game::drawUI() {
     float current_y = (float)GetScreenHeight() - font_size - text_gap;
 
     std::string score_str = "Score: " + std::to_string(score);
-    std::string highest_str = "Highest Atomic No: " + std::to_string(highest_atomic_number);
+    std::string highest_str = "Highest Atomic No: " + std::to_string(m_spawner.getMaxAtomicNumber());
     std::string sacrifice_str = has_sacrifice ? "Sacrifice Available" : "Sacrifice Unavailable";
 
     auto drawLine = [&](const std::string& text, Color color) {
@@ -94,10 +98,6 @@ void Game::shiftHotbar() {
 
     m_hotbar.clearSlot(2);
     is_placing = false;
-}
-
-void Game::updateHighestAtomicNumber(const int number) {
-    if (number > highest_atomic_number) highest_atomic_number = number;
 }
 
 

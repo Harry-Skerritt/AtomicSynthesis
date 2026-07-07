@@ -4,6 +4,7 @@
 
 #ifndef GAME_H
 #define GAME_H
+#include "Spawner.h"
 #include "../Grid/Grid.h"
 #include "../UI/Hotbar/Hotbar.h"
 
@@ -27,15 +28,14 @@ public:
 private:
     Grid m_grid;
     Hotbar m_hotbar;
+    Spawner m_spawner;
 
     bool is_placing = false;
 
     bool has_sacrifice = false;
     int score = 0;
-    int highest_atomic_number = 0;
 
     void shiftHotbar();
-    void updateHighestAtomicNumber(int number);
 
 };
 

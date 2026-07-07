@@ -39,6 +39,8 @@ set(SOURCES
         src/Grid/Tile.cpp
         src/AssetManager/AssetManager.h
         src/AssetManager/AssetManager.cpp
+        src/Game/Spawner.h
+        src/Game/Spawner.cpp
 )
 add_executable(${PROJECT_NAME} ${SOURCES})
 add_subdirectory(src)
