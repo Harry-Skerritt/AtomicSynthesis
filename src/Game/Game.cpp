@@ -104,8 +104,12 @@ void Game::drawTilePlacement() {
     }
 }
 
-void Game::performMergeCheck(const Tile* tile, const bool first_run) {
+void Game::performMergeCheck(const Tile* tile) {
     if (!tile) return;
+
+    const int q = tile->q;
+    const int r = tile->r;
+
     std::vector<Tile*> matches;
 
     for (int i = 0; i < 6; i++) {
@@ -115,16 +119,18 @@ void Game::performMergeCheck(const Tile* tile, const bool first_run) {
         }
     }
 
-    const int upgradeAmount = static_cast<int>(matches.size());
-    increaseTileNumber(tile->q, tile->r, upgradeAmount);
+    if (matches.empty()) return;
 
+    const int upgradeAmount = static_cast<int>(matches.size());
+    increaseTileNumber(q, r, upgradeAmount);
     score += (10 * upgradeAmount);
 
     for (const auto* neighbor : matches) {
         m_grid.setTile(neighbor->q, neighbor->r, 0);
     }
 
-    // Todo: Change this to a count
+    Tile* upgraded_tile = m_grid.getTile(q, r);
+    performMergeCheck(upgraded_tile);
 }
 
 void Game::checkSacrificeMilestone(const int new_max) {

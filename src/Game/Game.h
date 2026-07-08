@@ -21,7 +21,7 @@ public:
     void drawTilePlacement();
     void drawUI();
 
-    void performMergeCheck(const Tile* tile,  bool first_run = true);
+    void performMergeCheck(const Tile* tile);
     void checkSacrificeMilestone(int new_max);
 
     int num = 1;
