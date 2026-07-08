@@ -4,17 +4,18 @@
 
 #include "Game.h"
 #include "raylib.h"
-#include "../Grid/Tile.h"
-#include <cmath>
 #include <iostream>
 #include <ostream>
 
+#include "../Grid/Tile.h"
 #include "../AssetManager/AssetManager.h"
-#include "../utils/Element.h"
 #include "../utils/TextUtils.h"
 
 Game::Game()
-    : m_grid(), m_spawner() {}
+    : m_grid(), m_spawner()
+{
+    m_hotbar.setSlot(0, 1);
+}
 
 Game::~Game() {
 }
@@ -103,43 +104,44 @@ void Game::drawTilePlacement() {
     }
 }
 
-void Game::performMergeCheck(Tile* tile, const bool first_run) {
+void Game::performMergeCheck(const Tile* tile, const bool first_run) {
+    if (!tile) return;
+    std::vector<Tile*> matches;
 
     for (int i = 0; i < 6; i++) {
-        const auto n = m_grid.getNeighbour(tile->q, tile->r, i);
-        if (n == nullptr) continue;
-
-        if (n->atomic_number == tile->atomic_number) {
-            // Up the placed tile
-            const auto new_an = tile->atomic_number + 1;
-            m_grid.setTile(tile->q, tile->r, new_an);
-            m_spawner.setMaxAtomicNumber(new_an);
-
-            // Increase Score
-            // Todo: Figure out a value for this
-            score += 1;
-
-            // Remove old tile
-            m_grid.setTile(n->q, n->r, 0);
-
-            // Recheck
-            // Todo: Change this to a count
-            if (first_run) performMergeCheck(tile, false);
+        const auto n = m_grid.getNeighbour(static_cast<float>(tile->q), static_cast<float>(tile->r), i);
+        if (n && n->atomic_number == tile->atomic_number) {
+            matches.push_back(n);
         }
     }
+
+    const int upgradeAmount = static_cast<int>(matches.size());
+    increaseTileNumber(tile->q, tile->r, upgradeAmount);
+
+    score += (10 * upgradeAmount);
+
+    for (const auto* neighbor : matches) {
+        m_grid.setTile(neighbor->q, neighbor->r, 0);
+    }
+
+    // Todo: Change this to a count
 }
 
+void Game::checkSacrificeMilestone(const int new_max) {
+    if (new_max > current_max) {
+        int last_bucket = current_max / earn_sacrifice_amt;
+        int curr_bucket = new_max / earn_sacrifice_amt;
 
-void Game::calcSacrifice() {
-    if ((m_spawner.getMaxAtomicNumber() % earn_sacrifice_amt) == 0) {
-        num_sacrifice += 1;
+        int crossed = curr_bucket - last_bucket;
+
+        if (crossed > 0) {
+            num_sacrifice += crossed;
+        }
+        current_max = new_max;
     }
 
     has_sacrifice = (num_sacrifice >= 1);
 }
-
-
-
 
 // Private
 void Game::shiftHotbar() {
@@ -182,9 +184,19 @@ void Game::checkMouse() {
         }
 
         performMergeCheck(tile);
-        calcSacrifice();
         return;
     }
+}
+
+void Game::increaseTileNumber(const int q, const int r, const int amt) {
+    Tile* tile = m_grid.getTile(q, r);
+    if (!tile) return;
+
+    int new_atomic_number = tile->atomic_number + amt;
+    m_grid.setTile(tile->q, tile->r, new_atomic_number);
+    m_spawner.setMaxAtomicNumber(new_atomic_number);
+
+    checkSacrificeMilestone(new_atomic_number);
 }
 
 

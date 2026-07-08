@@ -21,8 +21,8 @@ public:
     void drawTilePlacement();
     void drawUI();
 
-    void performMergeCheck(Tile* tile,  bool first_run = true);
-    void calcSacrifice();
+    void performMergeCheck(const Tile* tile,  bool first_run = true);
+    void checkSacrificeMilestone(int new_max);
 
     int num = 1;
 
@@ -39,10 +39,12 @@ private:
     bool has_sacrifice = false;
     int earn_sacrifice_amt = 10;
     int num_sacrifice = 0;
+    int current_max = 0;
+
     int score = 0;
 
     float spawn_timer = 0.0f;
-    float spawn_interval = 2.0f; // Seconds
+    float spawn_interval = 1.0f; // Seconds
 
     Vector2 grid_pos = { 360.0f, 310.0f };
     Vector2 grid_sacrifice_pos = { 360.0f, 360.0f };
@@ -50,6 +52,8 @@ private:
     void shiftHotbar();
 
     void checkMouse();
+
+    void increaseTileNumber(int q, int r, int amt);
 
 };
 
