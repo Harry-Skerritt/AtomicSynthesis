@@ -6,6 +6,7 @@
 #define GRID_H
 #include <vector>
 #include "Tile.h"
+#include "raylib.h"
 
 
 class Grid {
@@ -20,9 +21,10 @@ public:
 
     Tile* getTileAtMouse();
     Tile* getNearestHex(float q, float r);
+    Tile* getNeighbour(float q, float r, int neighbour);
 
 
-    float getHexSize() { return hex_size; }
+    float getHexSize() const { return hex_size; }
 
 private:
     Tile* hovered_tile = nullptr;
@@ -31,6 +33,11 @@ private:
     float hex_size = 50.0f;
     float centre_x = 360.0f;
     float centre_y = 310.0f;
+
+    const Vector2 neighbours[6] = {
+        { 0, -1 }, { 1, -1 }, { 1, 0 },
+        { 0, 1 }, { -1, 1 }, { -1, 0 }
+    };
 };
 
 

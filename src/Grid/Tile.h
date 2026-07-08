@@ -11,6 +11,8 @@ class Tile {
 public:
     int q, r, atomic_number;
     Vector2 pos;
+    bool is_highlighted = false;
+    int neighbour;
 
     Tile(int q, int r, int atomic_number, Vector2 pos);
 

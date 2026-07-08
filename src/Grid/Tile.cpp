@@ -36,6 +36,11 @@ void Tile::draw(
         DrawPolyLinesEx(pos, 6, hex_size - 2, 0, 5.0f, Colours::TEXT_COLOUR);
     }
 
+    if (is_highlighted) {
+        DrawPolyLinesEx(pos, 6, hex_size - 2, 0, 5.0f, RED);
+        DrawText(std::to_string(neighbour).c_str(), pos.x - 10, pos.y - 15, 40, BLACK);
+    }
+
     if (atomic_number > 0) {
         auto symbol_font = AssetManager::GetFont("itim-40");
         auto num_font = AssetManager::GetFont("itim-20");

@@ -5,8 +5,9 @@
 #include "Grid.h"
 #include "raylib.h"
 #include <cmath>
+#include <iostream>
+#include <ostream>
 
-#include "../utils/Colours.h"
 #include "../utils/Element.h"
 
 Grid::Grid() {
@@ -23,8 +24,19 @@ void Grid::update() {
     hovered_tile = getTileAtMouse();
 }
 
-
 void Grid::draw(bool is_placing) {
+    for (auto& tile : tiles) tile.is_highlighted = false;
+
+    if (hovered_tile != nullptr) {
+        for (int i = 0; i < 6; i++) {
+            Tile* n = getNeighbour(hovered_tile->q, hovered_tile->r, i);
+            if (n != nullptr) {
+                n->is_highlighted = true;
+                n->neighbour = i;
+            }
+        }
+    }
+
     for (auto& tile : tiles) {
         bool is_hovered = (&tile == hovered_tile);
         tile.draw(hex_size, centre_x, centre_y, is_hovered, is_placing);
@@ -62,13 +74,32 @@ Tile *Grid::getNearestHex(float q, float r) {
     return nullptr;
 }
 
-
-void Grid::setTile(int q, int r, int atomic_number) {
+// Getters & Setters
+void Grid::setTile(const int q, const int r, const int atomic_number) {
     for (auto& tile : tiles) {
         if (tile.q == q && tile.r == r) {
             tile.atomic_number = atomic_number;
         }
     }
 }
+
+Tile *Grid::getTile(const int q, const int r) {
+    for (auto& tile : tiles) {
+        if (tile.q == q && tile.r == r) {
+            return &tile;
+        }
+    }
+    return nullptr;
+}
+
+
+Tile *Grid::getNeighbour(const float q, const float r, const int neighbour) {
+    auto [x, y] = neighbours[neighbour];
+    const Vector2 neighbour_coords = { q + x, r + y };
+
+    return getTile(neighbour_coords.x, neighbour_coords.y);
+}
+
+
 
 
