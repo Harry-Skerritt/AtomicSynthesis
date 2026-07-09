@@ -12,6 +12,8 @@ class AssetManager {
 private:
     static std::map<std::string, Font> fonts;
     static std::map<std::string, Texture> textures;
+    static std::map<std::string, Sound> sounds;
+    static std::map<std::string, Music> music;
 
 public:
     // Fonts
@@ -33,6 +35,24 @@ public:
         return textures[key];
     }
 
+    // Sounds
+    static void LoadSoundKey(std::string key, const char* path) {
+        sounds[key] = LoadSound(path);
+    }
+
+    static Sound& GetSound(std::string key) {
+        return sounds[key];
+    }
+
+    // Music
+    static void LoadMusicKey(std::string key, const char* path) {
+        music[key] = LoadMusicStream(path);
+    }
+
+    static Music& GetMusic(const std::string key) {
+        return music.at(key);
+    }
+
 
     static void UnloadAll() {
         for (auto& pair : fonts) {
@@ -44,6 +64,16 @@ public:
             UnloadTexture(pair.second);
         }
         textures.clear();
+
+        for (auto& pair : sounds) {
+            UnloadSound(pair.second);
+        }
+        sounds.clear();
+
+        for (auto& pair : music) {
+            UnloadMusicStream(pair.second);
+        }
+        music.clear();
     }
 };
 

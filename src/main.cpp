@@ -11,7 +11,7 @@
     #include <emscripten/emscripten.h>      // Emscripten library
 #endif
 
-GameState gameState;
+GameState* gameState = nullptr;
 
 static const int screen_width = 720;
 static const int screen_height = 720;
@@ -22,6 +22,7 @@ static void UpdateDrawFrame(void);
 
 int main() {
     InitWindow(screen_width, screen_height, "Atomic Synthesis");
+    InitAudioDevice();
     target = LoadRenderTexture(screen_width, screen_height);
     SetTextureFilter(target.texture, TEXTURE_FILTER_BILINEAR);
 
@@ -38,8 +39,22 @@ int main() {
     AssetManager::LoadTextureKey("atom", "resources/textures/atom.png");
     AssetManager::LoadTextureKey("small-btn", "resources/textures/small-btn-background.png");
 
+    // Sounds
+    AssetManager::LoadSoundKey("tile-place", "resources/sounds/tile_place.ogg");
+    AssetManager::LoadSoundKey("tile-remove", "resources/sounds/tile_remove.ogg");
+    AssetManager::LoadSoundKey("sacrifice-added", "resources/sounds/sacrifice_added.ogg");
+    AssetManager::LoadSoundKey("merge", "resources/sounds/merge.ogg");
+    AssetManager::LoadSoundKey("game-over", "resources/sounds/game_over.ogg");
+    AssetManager::LoadSoundKey("btn-click", "resources/sounds/button.ogg");
+    AssetManager::LoadSoundKey("game-start", "resources/sounds/game_start.ogg");
+    AssetManager::LoadSoundKey("sacrifice-mode", "resources/sounds/sacrifice_mode.ogg");
+
+    // Music
+    AssetManager::LoadMusicKey("main-music", "resources/music/main-music.mp3");
+    AssetManager::LoadMusicKey("menu-music", "resources/music/menu-music.mp3");
 
 
+    gameState = new GameState();
     // For WASM
 #if defined(PLATFORM_WEB)
     emscripten_set_main_loop(UpdateDrawFrame, 60, 1);
@@ -53,19 +68,24 @@ int main() {
 #endif
 
     UnloadRenderTexture(target);
+
+    delete gameState;
+    CloseAudioDevice();
     CloseWindow();
     AssetManager::UnloadAll();
+
     return 0;
 }
 
 void UpdateDrawFrame(void) {
+    if (gameState == nullptr) return;
     frame_counter++;
-    gameState.update();
+    gameState->update();
 
 
     BeginTextureMode(target);
         ClearBackground(Colours::MAIN_BACKGROUND);
-        gameState.draw();
+        gameState->draw();
     EndTextureMode();
 
     BeginDrawing();
@@ -78,6 +98,6 @@ void UpdateDrawFrame(void) {
 
     // UI?
 
-    gameState.drawUI();
+    gameState->drawUI();
     EndDrawing();
 }

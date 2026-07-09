@@ -7,12 +7,25 @@
 #include <iostream>
 #include <__ostream/basic_ostream.h>
 
-GameState::GameState() : menu(), game(), game_over() {}
+#include "../AssetManager/AssetManager.h"
+
+GameState::GameState() : menu(), game(), game_over(), curr_music() {
+    swapMusic("menu-music");
+}
+
 
 void GameState::update() {
+    if (curr_music != nullptr) {
+        UpdateMusicStream(*curr_music);
+    }
+
     if (current_state == State::MENU) {
         menu.update();
         if (menu.shouldStartGame()) {
+            if (curr_music != nullptr) StopMusicStream(*curr_music);
+
+            menu.reset();
+            swapMusic("main-music");
             current_state = State::PLAYING;
         }
 
@@ -30,6 +43,7 @@ void GameState::update() {
         switch (result_state) {
             case(0):
                 game.reset();
+                swapMusic("menu-music");
                 current_state = State::MENU;
                 break;
 
@@ -61,3 +75,11 @@ void GameState::drawUI() {
         game.drawUI();
     }
 }
+
+void GameState::swapMusic(const std::string &new_music) {
+    if (curr_music != nullptr) StopMusicStream(*curr_music);
+    curr_music = &AssetManager::GetMusic(new_music);
+    PlayMusicStream(*curr_music);
+    SetMusicVolume(*curr_music, 0.3f);
+}
+

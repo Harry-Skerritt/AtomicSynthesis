@@ -6,6 +6,7 @@
 #include "raylib.h"
 #include <iostream>
 
+#include "../AssetManager/AssetManager.h"
 #include "../utils/Colours.h"
 #include "../utils/TextUtils.h"
 
@@ -20,6 +21,7 @@ Menu::~Menu() {
 
 void Menu::update() {
     if (IsKeyPressed(KEY_ENTER)) {
+        PlaySound(AssetManager::GetSound("game-start"));
         start_game = true;
         std::cout << "Enter Pressed" << std::endl;
     }

@@ -14,15 +14,20 @@ class GameState {
 public:
     GameState();
 
-    State current_state = State::PLAYING; // Change to menu for prod
+    State current_state = State::MENU; // Change to menu for prod
 
     Menu menu;
     Game game;
     GameOver game_over;
 
+    Music* curr_music = nullptr;
+
     void update();
     void draw();
     void drawUI();
+
+private:
+    void swapMusic(const std::string &new_music);
 };
 
 #endif //GAMESTATE_H

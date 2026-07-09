@@ -16,6 +16,7 @@ public:
     void update();
     void draw();
     bool shouldStartGame() const { return start_game; };
+    void reset() { start_game = false; };
 
 private:
     bool start_game = false;

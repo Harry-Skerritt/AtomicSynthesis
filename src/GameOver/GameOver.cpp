@@ -9,9 +9,7 @@
 #include <iostream>
 
 GameOver::GameOver()
-    : score(0), unlock_count(0), total_count(0), sacrifice_count(0)
-{
-
+    : score(0), unlock_count(0), total_count(0), sacrifice_count(0), btn_sound() {
 }
 
 GameOver::~GameOver() {
@@ -39,6 +37,8 @@ void GameOver::init(const Game *game) {
     can_continue = (sacrifice_count >= 1);
 
     result_state = -1;
+
+    btn_sound = AssetManager::GetSound("btn-click");
 }
 
 void GameOver::update() {
@@ -46,9 +46,20 @@ void GameOver::update() {
     restart_button->update();
     continue_button->update();
 
-    if (quit_button->isPressed()) result_state = 0;
-    if (restart_button->isPressed()) result_state = 1;
-    if (continue_button->isPressed()) result_state = 2;
+    if (quit_button->isPressed()) {
+        PlaySound(btn_sound);
+        result_state = 0;
+    }
+
+    if (restart_button->isPressed()) {
+        PlaySound(btn_sound);
+        result_state = 1;
+    }
+
+    if (continue_button->isPressed()) {
+        PlaySound(btn_sound);
+        result_state = 2;
+    }
 }
 
 

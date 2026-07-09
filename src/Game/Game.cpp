@@ -39,6 +39,7 @@ void Game::update() {
     if (IsKeyPressed(KEY_E)) {
         if (has_sacrifice) {
             sacrifice_mode = !sacrifice_mode;
+            if (sacrifice_mode) PlaySound(AssetManager::GetSound("sacrifice-mode"));
         }
     }
 
@@ -46,11 +47,11 @@ void Game::update() {
     checkMouse();
 
     if (m_grid.getEmptyTiles() == 0) {
-        std::cout << "GAME OVER" << std::endl;
+        PlaySound(AssetManager::GetSound("game-over"));
         game_over = true;
     }
 
-    if (IsKeyPressed(KEY_O)) {
+    if (IsKeyPressed(KEY_W)) {
         game_over = true;
     }
 }
@@ -135,6 +136,7 @@ void Game::performMergeCheck(const Tile* tile) {
     score += (10 * upgradeAmount);
 
     for (const auto* neighbor : matches) {
+        PlaySound(AssetManager::GetSound("merge"));
         m_grid.setTile(neighbor->q, neighbor->r, 0);
     }
 
@@ -151,6 +153,7 @@ void Game::checkSacrificeMilestone(const int new_max) {
 
         if (crossed > 0) {
             num_sacrifice += crossed;
+            PlaySound(AssetManager::GetSound("sacrifice-added"));
         }
         current_max = new_max;
     }
@@ -193,6 +196,8 @@ void Game::removeTiles(int amt) {
         }
     }
 
+    num_sacrifice = 0;
+    has_sacrifice = false;
     game_over = false;
 }
 
@@ -219,6 +224,7 @@ void Game::checkMouse() {
     if (sacrifice_mode) {
         if (tile && tile->atomic_number > 0) {
             m_grid.setTile(tile->q, tile->r, 0);
+            PlaySound(AssetManager::GetSound("tile-remove"));
         }
         num_sacrifice -= 1;
         if (num_sacrifice <= 0) {
@@ -231,6 +237,7 @@ void Game::checkMouse() {
     if (is_placing) {
         if (tile && tile->isValidPlacement()) {
             m_grid.setTile(tile->q, tile->r, m_hotbar.getSlot(0));
+            PlaySound(AssetManager::GetSound("tile-place"));
             // Temp
             score += m_hotbar.getSlot(0);
             // ---
