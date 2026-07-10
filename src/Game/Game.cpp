@@ -23,69 +23,12 @@ Game::~Game() {
 
 void Game::update() {
     m_grid.update();
-
-    if (IsKeyPressed(KEY_S)) {
-        num_sacrifice++;
-        has_sacrifice = (num_sacrifice >= 1);
-    }
-
-    // Progress Screen
-    go_to_progress = false;
-    if (IsKeyPressed(KEY_TAB)) {
-        go_to_progress = true;
-    }
-
-    // Auto Generate Elements
-    spawn_timer += GetFrameTime();
-    if (spawn_timer >= spawn_interval) {
-        auto next_slot = m_hotbar.getNextEmptyIndex();
-
-        if (next_slot != -1) {
-            m_hotbar.setSlot(next_slot, m_spawner.spawnRandomElement(&m_grid));
-        }
-
-        spawn_timer = 0.0f;
-    }
-
-    // Sacrifice Mode
-    if (IsKeyPressed(KEY_E)) {
-        if (has_sacrifice) {
-            sacrifice_mode = !sacrifice_mode;
-            if (sacrifice_mode) PlaySound(AssetManager::GetSound("sacrifice-mode"));
-        }
-    }
-
-    // Placing
-    is_placing = m_hotbar.isSlotOccupied(0);
-    checkMouse();
-
-    static int frameCounter = 0;
-    if (!catalyst_queue.empty() && frameCounter++ % 5 == 0) { // Every 5 frames
-        Tile* next = catalyst_queue.front();
-        catalyst_queue.pop();
-        performCatalystExplosion(next);
-    }
-
-    if (is_pulsing) {
-        pulse_radius += 4.0f;
-        if (pulse_radius > 150.0f) {
-            is_pulsing = false;
-        }
-    }
-
     text_manager.update(GetFrameTime());
 
-    // Game Lost
-    if (m_grid.getEmptyTiles() == 0) {
-        PlaySound(AssetManager::GetSound("game-over"));
-        game_over = true;
-    }
-
-    // Game Won
-    if (m_spawner.getMaxAtomicNumber() == ELEMENT_COUNT) {
-        PlaySound(AssetManager::GetSound("game-win"));
-        game_won = true;
-    }
+    handleSpawning();
+    handlePlacing();
+    handleCatalysts();
+    handleStateTransitions();
 }
 
 void Game::draw() {
@@ -113,9 +56,9 @@ void Game::drawUI() {
 
     // Draw Sacrifice Icon
     Vector2 sacrifice_pos = sacrifice_mode ? (Vector2){ 50.0f, 80.0f } : (Vector2){ 50.0f, 50.0f };
-    sacrifice_icon.draw(
-        sacrifice_pos, AssetManager::GetTexture("sacrifice-icon"), "E", num_sacrifice, (has_sacrifice));
+    sacrifice_icon.draw( sacrifice_pos, AssetManager::GetTexture("sacrifice-icon"), "E", num_sacrifice, (has_sacrifice));
 
+    // Draw Main UI
     m_ui.draw(
         { 10, (float)GetScreenHeight() - 90 },
         { 250, 80 },
@@ -124,78 +67,7 @@ void Game::drawUI() {
 
 
     // Draw Sacrifice Mode Stuff
-    if (sacrifice_mode) {
-        auto sm_font = AssetManager::GetFont("itim-40");
-        auto sm_x = Utils::getCentredTextPosEx("SACRIFICE_MODE", 40, &sm_font, 2);
-        float pulse = (std::sin(GetTime() * 4.0f) * 0.5f) + 0.5f;
-
-        Rectangle sm_background = {0, 0, (float)GetScreenWidth(), 100 };
-
-        DrawRectangleGradientEx(sm_background, BLACK, Fade(BLACK, 0.0f), Fade(BLACK, 0.0f), BLACK);
-
-        DrawTextEx(sm_font, "SACRIFICE MODE", { (float)sm_x, 20 }, 40, 2, RED);
-
-        DrawRectangleLinesEx({0, 0, (float)GetScreenWidth(), (float)GetScreenHeight()},
-                            8, Fade(RED, pulse));
-    }
-}
-
-void Game::drawTilePlacement() {
-    if (!is_placing) return;
-
-    Tile* temp_tile = m_grid.getTileAtMouse();
-
-    if (temp_tile != nullptr && temp_tile->atomic_number <= 0) {
-        temp_tile->drawTempTile(temp_tile->pos, m_grid.getHexSize() - 10, m_hotbar.getSlot(0));
-    }
-}
-
-void Game::performMergeCheck(const Tile* tile) {
-    if (!tile) return;
-
-    const int q = tile->q;
-    const int r = tile->r;
-
-    std::vector<Tile*> matches;
-
-    for (int i = 0; i < 6; i++) {
-        const auto n = m_grid.getNeighbour(static_cast<float>(tile->q), static_cast<float>(tile->r), i);
-        if (n && n->atomic_number == tile->atomic_number) {
-            matches.push_back(n);
-        }
-    }
-
-    if (matches.empty()) return;
-
-    const int upgradeAmount = static_cast<int>(matches.size());
-    increaseTileNumber(q, r, upgradeAmount);
-    score += (10 * upgradeAmount);
-    text_manager.add("+" + std::to_string(10 * upgradeAmount), tile->pos);
-
-    for (const auto* neighbor : matches) {
-        PlaySound(AssetManager::GetSound("merge"));
-        m_grid.setTile(neighbor->q, neighbor->r, 0);
-    }
-
-    Tile* upgraded_tile = m_grid.getTile(q, r);
-    performMergeCheck(upgraded_tile);
-}
-
-void Game::checkSacrificeMilestone(const int new_max) {
-    if (new_max > current_max) {
-        int last_bucket = current_max / earn_sacrifice_amt;
-        int curr_bucket = new_max / earn_sacrifice_amt;
-
-        int crossed = curr_bucket - last_bucket;
-
-        if (crossed > 0) {
-            num_sacrifice += crossed;
-            PlaySound(AssetManager::GetSound("sacrifice-added"));
-        }
-        current_max = new_max;
-    }
-
-    has_sacrifice = (num_sacrifice >= 1);
+    if (sacrifice_mode) drawSacrificeOverlay();
 }
 
 // Game Over
@@ -241,7 +113,25 @@ void Game::removeTiles(int amt) {
 }
 
 
-// Private
+// ----- PRIVATE -----
+// --- Logic Functions ---
+void Game::checkSacrificeMilestone(const int new_max) {
+    if (new_max > current_max) {
+        int last_bucket = current_max / earn_sacrifice_amt;
+        int curr_bucket = new_max / earn_sacrifice_amt;
+
+        int crossed = curr_bucket - last_bucket;
+
+        if (crossed > 0) {
+            num_sacrifice += crossed;
+            PlaySound(AssetManager::GetSound("sacrifice-added"));
+        }
+        current_max = new_max;
+    }
+
+    has_sacrifice = (num_sacrifice >= 1);
+}
+
 void Game::shiftHotbar() {
     for (int i = 0; i < m_hotbar.getSlotCount(); i++) {
         if (m_hotbar.isSlotOccupied(i + 1)) {
@@ -277,6 +167,8 @@ void Game::checkMouse() {
     placeTile(tile);
 }
 
+
+// --- Logic Functions - Tiles ---
 void Game::placeTile(Tile* tile) {
     if (!tile || !tile->isValidPlacement()) return;
 
@@ -305,6 +197,47 @@ void Game::placeTile(Tile* tile) {
     m_grid.updateStability(tile);
 }
 
+void Game::increaseTileNumber(const int q, const int r, const int amt) {
+    Tile* tile = m_grid.getTile(q, r);
+    if (!tile) return;
+
+    int new_atomic_number = tile->atomic_number + amt;
+    m_grid.setTile(tile->q, tile->r, new_atomic_number);
+    m_spawner.setMaxAtomicNumber(new_atomic_number);
+
+    checkSacrificeMilestone(new_atomic_number);
+}
+
+void Game::performMergeCheck(const Tile* tile) {
+    if (!tile) return;
+
+    const int q = tile->q;
+    const int r = tile->r;
+
+    std::vector<Tile*> matches;
+
+    for (int i = 0; i < 6; i++) {
+        const auto n = m_grid.getNeighbour(static_cast<float>(tile->q), static_cast<float>(tile->r), i);
+        if (n && n->atomic_number == tile->atomic_number) {
+            matches.push_back(n);
+        }
+    }
+
+    if (matches.empty()) return;
+
+    const int upgradeAmount = static_cast<int>(matches.size());
+    increaseTileNumber(q, r, upgradeAmount);
+    score += (10 * upgradeAmount);
+    text_manager.add("+" + std::to_string(10 * upgradeAmount), tile->pos);
+
+    for (const auto* neighbor : matches) {
+        PlaySound(AssetManager::GetSound("merge"));
+        m_grid.setTile(neighbor->q, neighbor->r, 0);
+    }
+
+    Tile* upgraded_tile = m_grid.getTile(q, r);
+    performMergeCheck(upgraded_tile);
+}
 
 void Game::performCatalystExplosion(Tile *tile) {
     PlaySound(AssetManager::GetSound("catalyst"));
@@ -328,14 +261,94 @@ void Game::performCatalystExplosion(Tile *tile) {
     };
 }
 
+// --- Update Functions ---
+void Game::handlePlacing() {
+    // Placing
+    is_placing = m_hotbar.isSlotOccupied(0);
+    checkMouse();
 
-void Game::increaseTileNumber(const int q, const int r, const int amt) {
-    Tile* tile = m_grid.getTile(q, r);
-    if (!tile) return;
+}
 
-    int new_atomic_number = tile->atomic_number + amt;
-    m_grid.setTile(tile->q, tile->r, new_atomic_number);
-    m_spawner.setMaxAtomicNumber(new_atomic_number);
+void Game::handleCatalysts() {
+    static int frame_counter = 0;
+    if (!catalyst_queue.empty() && frame_counter++ % 5 == 0) { // Every 5 frames
+        Tile* next = catalyst_queue.front();
+        catalyst_queue.pop();
+        performCatalystExplosion(next);
+    }
 
-    checkSacrificeMilestone(new_atomic_number);
+    if (is_pulsing) {
+        pulse_radius += 4.0f;
+        if (pulse_radius > 150.0f) {
+            is_pulsing = false;
+        }
+    }
+}
+
+void Game::handleSpawning() {
+    // Auto Generate Elements
+    spawn_timer += GetFrameTime();
+    if (spawn_timer >= spawn_interval) {
+        auto next_slot = m_hotbar.getNextEmptyIndex();
+
+        if (next_slot != -1) {
+            m_hotbar.setSlot(next_slot, m_spawner.spawnRandomElement(&m_grid));
+        }
+
+        spawn_timer = 0.0f;
+    }
+}
+
+void Game::handleStateTransitions() {
+    // Progress Screen
+    go_to_progress = false;
+    if (IsKeyPressed(KEY_TAB)) {
+        go_to_progress = true;
+    }
+
+    // Sacrifice Mode
+    if (IsKeyPressed(KEY_E)) {
+        if (has_sacrifice) {
+            sacrifice_mode = !sacrifice_mode;
+            if (sacrifice_mode) PlaySound(AssetManager::GetSound("sacrifice-mode"));
+        }
+    }
+
+    // Game Lost
+    if (m_grid.getEmptyTiles() == 0) {
+        PlaySound(AssetManager::GetSound("game-over"));
+        game_over = true;
+    }
+
+    // Game Won
+    if (m_spawner.getMaxAtomicNumber() == ELEMENT_COUNT) {
+        PlaySound(AssetManager::GetSound("game-win"));
+        game_won = true;
+    }
+}
+
+// --- Draw Functions ---
+void Game::drawSacrificeOverlay() {
+    auto sm_font = AssetManager::GetFont("itim-40");
+    auto sm_x = Utils::getCentredTextPosEx("SACRIFICE_MODE", 40, &sm_font, 2);
+    float pulse = (std::sin(GetTime() * 4.0f) * 0.5f) + 0.5f;
+
+    Rectangle sm_background = {0, 0, (float)GetScreenWidth(), 100 };
+
+    DrawRectangleGradientEx(sm_background, BLACK, Fade(BLACK, 0.0f), Fade(BLACK, 0.0f), BLACK);
+
+    DrawTextEx(sm_font, "SACRIFICE MODE", { (float)sm_x, 20 }, 40, 2, RED);
+
+    DrawRectangleLinesEx({0, 0, (float)GetScreenWidth(), (float)GetScreenHeight()},
+                        8, Fade(RED, pulse));
+}
+
+void Game::drawTilePlacement() {
+    if (!is_placing) return;
+
+    Tile* temp_tile = m_grid.getTileAtMouse();
+
+    if (temp_tile != nullptr && temp_tile->atomic_number <= 0) {
+        temp_tile->drawTempTile(temp_tile->pos, m_grid.getHexSize() - 10, m_hotbar.getSlot(0));
+    }
 }
