@@ -27,11 +27,6 @@ void Game::update() {
     text_manager.update(GetFrameTime());
     achievement_manager.update(GetFrameTime());
 
-    if (IsKeyDown(KEY_A)) {
-        achievement_manager.add("Transition Metals Complete", TRANSITION_METAL);
-        AudioManager::PlaySFX("achievement");
-    }
-
     handleSpawning();
     handlePlacing();
     handleCatalysts();

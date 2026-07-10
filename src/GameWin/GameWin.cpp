@@ -15,13 +15,14 @@ GameWin::~GameWin() {
 }
 
 
-void GameWin::init() {
+void GameWin::init(Game* game) {
     quit_button = new Button(AssetManager::GetTexture("small-btn"),
         { static_cast<float>(GetScreenWidth()) / 2.0f - 200.0f, 615 },  { 400, 65}, "QUIT TO MENU");
 
     restart_button = new Button(AssetManager::GetTexture("small-btn"),
         { static_cast<float>(GetScreenWidth()) / 2.0f - 200.0f, 530 }, { 400, 65 }, "RESTART");
 
+    score = game->getScore();
 
     result_state = -1;
 }
@@ -65,8 +66,15 @@ void GameWin::draw() {
     auto unlock_text = "You Synthesised All The Elements!";
     auto unlock_size = MeasureTextEx(meta_font, unlock_text, 40, 2);
     DrawTextEx(meta_font, unlock_text,
-        { GetScreenWidth() / 2 - unlock_size.x / 2, 200 },
+        { GetScreenWidth() / 2 - unlock_size.x / 2, 250 },
         40, 2, WHITE);
+
+    // Score
+    auto score_text = "Score: " + std::to_string(score);
+    auto score_size = MeasureTextEx(meta_font, score_text.c_str(), 50, 2);
+    DrawTextEx(meta_font, score_text.c_str(),
+        { GetScreenWidth() / 2 - score_size.x / 2, 150},
+        50, 2, WHITE);
 
     quit_button->draw();
     restart_button->draw();

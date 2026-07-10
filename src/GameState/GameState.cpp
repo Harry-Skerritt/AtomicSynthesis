@@ -36,7 +36,7 @@ void GameState::update() {
         }
 
         if (game.isGameWon()) {
-            game_win.init();
+            game_win.init(&game);
             current_state = State::GAME_WIN;
         }
 
